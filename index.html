@@ -2,21 +2,55 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>我的週計畫表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的行動計畫表</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        select, input, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        input { flex-grow: 1; }
-        button { background-color: #28a745; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #218838; }
-        .day-section { margin-top: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .day-title { font-weight: bold; color: #007bff; }
-        ul { list-style: none; padding: 0; }
-        li { background: #f9f9f9; margin: 5px 0; padding: 8px; display: flex; justify-content: space-between; border-radius: 4px; }
-        .delete-btn { color: red; cursor: pointer; font-size: 12px; }
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f0f2f5;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 15px; }
+        .container { max-width: 100%; margin: auto; }
+        
+        /* 標題美化 */
+        h2 { text-align: left; color: #1c1e21; margin-bottom: 20px; font-size: 1.5rem; }
+
+        /* 輸入區域：手機上採垂直堆疊，按鈕變寬 */
+        .input-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 12px; }
+        
+        select, input, button { 
+            padding: 14px; /* 加大觸控範圍 */
+            font-size: 16px; /* 防止 iOS 自動放大畫面 */
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            outline: none;
+        }
+        
+        button { background-color: var(--primary-color); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:active { opacity: 0.8; transform: scale(0.98); } /* 點擊回饋感 */
+
+        /* 列表區塊：改為卡片式設計 */
+        .day-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .day-title { font-weight: bold; color: var(--primary-color); border-bottom: 2px solid #f0f2f5; padding-bottom: 8px; margin-bottom: 10px; }
+        
+        ul { list-style: none; padding: 0; margin: 0; }
+        li { 
+            padding: 12px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-bottom: 1px solid #fafafa;
+        }
+        li:last-child { border-bottom: none; }
+        
+        .delete-btn { 
+            color: #ff4d4f; 
+            padding: 8px 12px; 
+            font-size: 14px;
+            background: #fff1f0;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -24,51 +58,51 @@
 <div class="container">
     <h2>📅 我的週計畫</h2>
     
-    <div class="input-group">
-        <select id="daySelect">
-            <option value="Monday">週一</option>
-            <option value="Tuesday">週二</option>
-            <option value="Wednesday">週三</option>
-            <option value="Thursday">週四</option>
-            <option value="Friday">週五</option>
-            <option value="Saturday">週六</option>
-            <option value="Sunday">週日</option>
-        </select>
-        <input type="text" id="planInput" placeholder="輸入活動計畫...">
-        <button onclick="addPlan()">新增</button>
+    <div class="input-card">
+        <div class="input-group">
+            <select id="daySelect">
+                <option value="週一">週一</option>
+                <option value="週二">週二</option>
+                <option value="週三">週三</option>
+                <option value="週四">週四</option>
+                <option value="週五">週五</option>
+                <option value="週六">週六</option>
+                <option value="週日">週日</option>
+            </select>
+            <input type="text" id="planInput" placeholder="想安排什麼活動？" maxlength="50">
+            <button onclick="addPlan()">確認新增</button>
+        </div>
     </div>
 
-    <div id="planList">
-        </div>
+    <div id="planList"></div>
 </div>
 
 <script>
-    // 初始化：從瀏覽器讀取舊資料
     let myPlans = JSON.parse(localStorage.getItem('weeklyPlans')) || {
-        Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []
+        "週一": [], "週二": [], "週三": [], "週四": [], "週五": [], "週六": [], "週日": []
     };
 
     function renderPlans() {
         const listDiv = document.getElementById('planList');
         listDiv.innerHTML = '';
+        const days = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"];
 
-        for (const day in myPlans) {
-            if (myPlans[day].length > 0) {
-                let section = `<div class="day-section"><div class="day-title">${day}</div><ul>`;
+        days.forEach(day => {
+            if (myPlans[day] && myPlans[day].length > 0) {
+                let card = `<div class="day-card"><div class="day-title">${day}</div><ul>`;
                 myPlans[day].forEach((item, index) => {
-                    section += `<li>${item} <span class="delete-btn" onclick="deletePlan('${day}', ${index})">刪除</span></li>`;
+                    card += `<li><span>${item}</span> <span class="delete-btn" onclick="deletePlan('${day}', ${index})">刪除</span></li>`;
                 });
-                section += `</ul></div>`;
-                listDiv.innerHTML += section;
+                card += `</ul></div>`;
+                listDiv.innerHTML += card;
             }
-        }
-        // 將最新狀態存回瀏覽器
+        });
         localStorage.setItem('weeklyPlans', JSON.stringify(myPlans));
     }
 
     function addPlan() {
         const day = document.getElementById('daySelect').value;
-        const text = document.getElementById('planInput').value;
+        const text = document.getElementById('planInput').value.trim();
         if (text) {
             myPlans[day].push(text);
             document.getElementById('planInput').value = '';
@@ -77,11 +111,12 @@
     }
 
     function deletePlan(day, index) {
-        myPlans[day].splice(index, 1);
-        renderPlans();
+        if(confirm('確定要刪除嗎？')) {
+            myPlans[day].splice(index, 1);
+            renderPlans();
+        }
     }
 
-    // 第一次開啟網頁時渲染一次
     renderPlans();
 </script>
 
